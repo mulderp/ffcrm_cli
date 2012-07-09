@@ -1,0 +1,2 @@
+module FFCRM
+end

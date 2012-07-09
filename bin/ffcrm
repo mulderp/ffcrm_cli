@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.dirname(__FILE__) + '/../lib'
+require 'ffcrm/cli'
+
+FFCRM::Cli.new(ARGV.dup).run
