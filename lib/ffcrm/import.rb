@@ -6,19 +6,20 @@ module FFCRM
     def initialize(args)
       @file_name = args[:file]
       @resource = args[:resource]
-      @attributes = args[:attributes]
+      @header = args[:attributes]
     end
 
     def run
       puts "[ffcrm_cli] Run import ..."
       puts "[ffcrm_cli] Use file: #{@file_name}"
       f = File.new(@file_name)
-      puts "[ffcrm_cli] Use attributes from CLI header: #{@attributes}"
+      puts "[ffcrm_cli] Use header from CLI header: #{@header}"
       @klass = Kernel.const_get(@resource.classify)
       ls = f.readlines
-      ls.each do |l|
+      ls[1..-1].each do |l|
         l = l.gsub("\r","").gsub("\n","") if l.class == String
-        import_resource(l)
+        res = import_resource(l)
+        puts res.inspect
       end
 #      CSV.foreach(@file_name, :headers => true ) do |row|
 #        name = row["Name"]
@@ -28,8 +29,15 @@ module FFCRM
 
     def import_resource(str)
       fields = str.split(";")
-      object = @klass.send("find_by_#{@attributes[0]}", fields[0])
-      object ||= @klass.create(fields)
+      @hash = {}
+      @header.each_with_index { |key, i| @hash[key.to_sym] = fields[i].strip if fields[i] }
+
+      object = @klass.send("find_by_#{@header[0]}", fields[0].strip)
+      if object
+        object.update_attributes(@hash)
+      else
+        object ||= @klass.create(@hash)
+      end
       object
     end
   end
